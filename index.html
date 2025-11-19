@@ -1,0 +1,848 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>在线商城</title>
+    <!-- 核心依赖引入（仅保留必要资源） -->
+     <link href="./js/element/index.css" rel="stylesheet" type="text/css">
+    <script src="./js/vue/vue/vue-2.7.6.min.js"></script>
+    <script src="./js/element/index.js"></script>
+    <script src="./js/vue/vue/axios.min.js"></script>
+   
+
+    <style>
+        /* 保留核心样式，删除未使用冗余样式 */
+        html, body {
+            background: linear-gradient(135deg, #fdf2f8 0%, #fce7f3 50%, #fdf2f8 100%);
+            padding: 0;
+            margin: 0;
+            font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
+            min-height: 100vh;
+        }
+
+        #shopApp {
+            background-color: transparent;
+            min-height: 100vh;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        /* 导航栏核心样式 */
+        .navbar {
+            background: linear-gradient(to right, rgba(255, 255, 255, 0.98), rgba(252, 231, 243, 0.95));
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            padding: 18px 0;
+            margin-bottom: 0;
+            backdrop-filter: blur(10px);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .navbar-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 30px;
+            box-sizing: border-box;
+        }
+
+        .logo {
+            font-size: 28px;
+            font-weight: bold;
+            background: linear-gradient(135deg, #ec4899, #f97316);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+            letter-spacing: 1px;
+        }
+
+        /* 商品列表核心样式 */
+        .product-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+            margin-top: 0;
+            padding: 0 10px;
+            width: 100%;
+        }
+
+        .product-card {
+            background: linear-gradient(to bottom, #ffffff, #fefefe);
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 6px 20px rgba(236, 72, 153, 0.12);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 1px solid rgba(236, 72, 153, 0.1);
+        }
+
+        .product-card:hover {
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: 0 12px 35px rgba(236, 72, 153, 0.2);
+            border-color: rgba(236, 72, 153, 0.3);
+        }
+
+        .product-image {
+            width: 100%;
+            height: 240px;
+            background: linear-gradient(135deg, #fdf2f8, #fce7f3);
+            overflow: hidden;
+            position: relative;
+        }
+
+        .product-image::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(to bottom, transparent 60%, rgba(255,255,255,0.3));
+            pointer-events: none;
+        }
+
+        .product-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .product-card:hover .product-image img {
+            transform: scale(1.1);
+        }
+
+        .product-info {
+            padding: 22px 20px;
+            background: linear-gradient(to bottom, #ffffff, #fefefe);
+        }
+
+        .product-name {
+            font-size: 19px;
+            font-weight: 700;
+            color: #2d3748;
+            margin: 0 0 8px 0;
+            line-height: 1.4;
+            letter-spacing: 0.3px;
+        }
+
+        .product-desc {
+            font-size: 14px;
+            color: #718096;
+            margin: 0 0 15px 0;
+            line-height: 1.5;
+            height: 42px;
+            overflow: hidden;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+        }
+
+        .product-price {
+            font-size: 24px;
+            background: linear-gradient(135deg, #ec4899, #f97316);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-weight: 700;
+            margin-bottom: 18px;
+            letter-spacing: 0.5px;
+        }
+
+        .add-to-cart-btn {
+            width: 100%;
+            background: linear-gradient(135deg, #ec4899, #f97316);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            padding: 14px 0;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(236, 72, 153, 0.3);
+            letter-spacing: 0.5px;
+        }
+
+        .add-to-cart-btn:hover {
+            background: linear-gradient(135deg, #f97316, #ec4899);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(236, 72, 153, 0.4);
+        }
+
+        .add-to-cart-btn:disabled {
+            background-color: #ddd;
+            color: #999;
+            cursor: not-allowed;
+        }
+
+        /* 购物车核心样式 */
+        .cart-summary {
+            background: linear-gradient(to right, rgba(255, 255, 255, 0.98), rgba(252, 231, 243, 0.95));
+            border-radius: 16px;
+            padding: 25px 30px;
+            margin-top: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 8px 30px rgba(236, 72, 153, 0.15);
+            border: 1px solid rgba(236, 72, 153, 0.1);
+        }
+
+        .total-price {
+            font-size: 28px;
+            font-weight: bold;
+            background: linear-gradient(135deg, #ec4899, #f97316);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        /* 管理员面板核心样式 */
+        .admin-panel {
+            background: linear-gradient(to bottom, rgba(255, 255, 255, 0.98), rgba(252, 231, 243, 0.95));
+            border-radius: 16px;
+            padding: 30px;
+            margin-top: 30px;
+            box-shadow: 0 8px 30px rgba(236, 72, 153, 0.15);
+            border: 1px solid rgba(236, 72, 153, 0.1);
+        }
+
+        .admin-toolbar {
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        /* 响应式核心适配 */
+        @media (max-width: 768px) {
+            .product-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 15px;
+            }
+            
+            .product-image {
+                height: 200px;
+            }
+            
+            .navbar-content {
+                flex-wrap: wrap;
+                gap: 15px;
+                padding: 0 15px;
+            }
+            
+            .el-input {
+                width: 100% !important;
+                margin: 10px 0 !important;
+            }
+
+            .carousel-container {
+                height: 250px;
+                margin: 20px auto 0;
+            }
+
+            .container {
+                padding: 0 15px;
+            }
+        }
+
+        /* 轮播图容器：优化比例和视觉效果 */
+        .carousel-container {
+            width: 100%;
+            max-width: 100%;
+            height: 380px;
+            margin: 0;
+            border-radius: 0;
+            overflow: hidden;
+            box-shadow: 0 4px 20px rgba(236, 72, 153, 0.1);
+            position: relative;
+            border: none;
+            background-color: #fdf2f8;
+        }
+
+        /* 轮播图组件 */
+        .el-carousel {
+            width: 100% !important;
+            height: 100% !important;
+            margin: 0 !important;
+        }
+
+        /* 轮播图项 */
+        .el-carousel-item {
+            margin: 0 !important;
+            padding: 0 !important;
+            position: relative;
+            width: 100% !important;
+            height: 100% !important;
+        }
+
+        /* 图片样式：填充整个容器 */
+        .carousel-img {
+            width: 100% !important;
+            height: 100% !important;
+            object-fit: cover !important;
+            object-position: center !important;
+            transition: transform 0.6s ease;
+            display: block !important;
+            margin: 0 !important;
+            padding: 0 !important;
+        }
+
+        /* 轮播图悬停效果 */
+        .el-carousel-item:hover .carousel-img {
+            transform: scale(1.05);
+        }
+
+        /* 轮播图指示器美化 - 放在图片内部底部 */
+        .carousel-container >>> .el-carousel__indicator {
+            background-color: rgba(255, 255, 255, 0.5);
+        }
+
+        .carousel-container >>> .el-carousel__indicator.is-active {
+            background: linear-gradient(135deg, #ec4899, #f97316);
+        }
+
+        .carousel-container >>> .el-carousel__indicators {
+            bottom: 15px;
+        }
+
+        /* 移除 Element UI 默认的内边距和边距 */
+        .carousel-container >>> .el-carousel__container {
+            height: 100% !important;
+            margin: 0 !important;
+            padding: 0 !important;
+        }
+    </style>
+</head>
+<body>
+    <div id="shopApp">
+        <!-- 导航栏（保留核心功能：Logo、搜索、购物车、登录、管理员入口） -->
+        <div class="navbar">
+            <div class="navbar-content">
+                <div class="logo">在线商城</div>
+                
+                <!-- 搜索框（后端交互：关键词搜索商品） -->
+                <el-input v-model="searchKeyword" placeholder="搜索商品..." style="width: 400px; margin: 0 20px;"
+                    @keyup.enter.native="searchProducts">
+                    <el-button slot="append" icon="el-icon-search" @click="searchProducts"></el-button>
+                </el-input>
+                
+                <div>
+                    <!-- 购物车（后端交互：查看购物车） -->
+                    <el-badge :value="cartCount" :hidden="cartCount === 0">
+                        <el-button @click="showCart">购物车</el-button>
+                    </el-badge>
+                    
+                    <!-- 管理员入口（后端交互：管理员登录） -->
+                    <el-button v-if="!isAdminMode" type="warning" @click="enterAdminMode" style="margin-left: 10px;">管理后台</el-button>
+                    
+                    <!-- 登录/用户菜单（后端交互：登录/注册/退出） -->
+                    <el-button v-if="!currentUser" type="primary" @click="showLoginDialog" style="margin-left: 10px;">登录</el-button>
+                    <el-dropdown v-else @command="handleUserCommand" style="margin-left: 10px;">
+                        <span style="cursor: pointer;">欢迎, {{currentUser.username}}<i class="el-icon-arrow-down el-icon--right"></i></span>
+                        <el-dropdown-menu slot="dropdown">
+                            <el-dropdown-item command="logout">退出登录</el-dropdown-item>
+                        </el-dropdown-menu>
+                    </el-dropdown>
+                </div>
+            </div>
+        </div>
+
+        <!-- 甜品轮播图：仅在商品列表页面显示，管理员模式隐藏 -->
+        <div v-show="!isAdminMode && currentPage === 'products'" class="carousel-container">
+            <el-carousel autoplay interval="5000" indicator-position="none" arrow="hover" height="380px">
+                <!-- autoplay：自动播放；interval：切换间隔5秒；indicator-position：none隐藏指示器；arrow：hover显示箭头 -->
+                <!-- 轮播图项1：精美甜品拼盘 -->
+                <el-carousel-item>
+                    <img src="https://images.unsplash.com/photo-1488477181946-6428a0291777?w=1920&h=672&fit=crop" alt="精美甜品拼盘" class="carousel-img">
+                </el-carousel-item>
+                <!-- 轮播图项2：马卡龙甜品 -->
+                <el-carousel-item>
+                    <img src="https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=1920&h=672&fit=crop" alt="马卡龙甜品" class="carousel-img">
+                </el-carousel-item>
+                <!-- 轮播图项3：巧克力蛋糕 -->
+                <el-carousel-item>
+                    <img src="https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=1920&h=672&fit=crop" alt="巧克力蛋糕" class="carousel-img">
+                </el-carousel-item>
+                <!-- 轮播图项4：甜品店展示 -->
+                <el-carousel-item>
+                    <img src="https://images.unsplash.com/photo-1486427944299-d1955d23e34d?w=1920&h=672&fit=crop" alt="甜品店展示" class="carousel-img">
+                </el-carousel-item>
+            </el-carousel>
+        </div>
+
+        <div class="container">
+
+            <!-- 商品列表页面（后端交互：加载商品、添加购物车） -->
+            <div v-show="!isAdminMode && currentPage === 'products'">
+                <h2 style="color: white; text-shadow: 2px 2px 4px rgba(0,0,0,0.5); margin: 20px 0 15px 0;">商品列表</h2>
+                <div class="product-grid">
+                    <div v-for="product in products" :key="product.id" class="product-card">
+                        <div class="product-image">
+                            <img v-if="getProductImageUrl(product)" :src="getProductImageUrl(product)" :alt="product.name">
+                            <span v-else style="font-size: 48px; display: flex; align-items: center; justify-content: center; height: 100%;">🍰</span>
+                        </div>
+                        <div class="product-info">
+                            <div class="product-name">{{product.name}}</div>
+                            <div v-if="product.description" class="product-desc">{{product.description}}</div>
+                            <div class="product-price">¥{{product.price}}</div>
+                            <button class="add-to-cart-btn" :disabled="product.stock <= 0" @click="addToCart(product.id)">
+                                {{product.stock <= 0 ? '已售罄' : '加入购物车'}}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <el-empty v-if="products.length === 0" description="暂无商品"></el-empty>
+            </div>
+
+
+
+            <!-- 购物车页面（后端交互：加载购物车、更新数量、删除商品、结算） -->
+            <div v-show="!isAdminMode && currentPage === 'cart'">
+                <el-button @click="backToProducts" icon="el-icon-back" style="margin-bottom: 15px;">返回商品列表</el-button>
+                <h2 style="color: white; text-shadow: 2px 2px 4px rgba(0,0,0,0.5);">购物车</h2>
+                
+                <el-card v-if="cartItems.length > 0">
+                    <el-table :data="cartItems" style="width: 100%">
+                        <el-table-column label="商品" width="300">
+                            <template slot-scope="scope">
+                                <div style="display: flex; align-items: center;">
+                                    <div style="width: 60px; height: 60px; background: #f0f0f0; border-radius: 4px; display: flex; align-items: center; justify-content: center; margin-right: 10px;">
+                                        <img v-if="getProductImageUrl(scope.row.product)" :src="getProductImageUrl(scope.row.product)" style="width: 100%; height: 100%; object-fit: cover; border-radius: 4px;">
+                                        <span v-else style="font-size: 24px;">🛍️</span>
+                                    </div>
+                                    <span style="font-weight: 600;">{{scope.row.product.name}}</span>
+                                </div>
+                            </template>
+                        </el-table-column>
+                        <el-table-column label="单价" width="120">
+                            <template slot-scope="scope">
+                                <span style="color: #409EFF; font-weight: bold;">¥{{scope.row.product.price}}</span>
+                            </template>
+                        </el-table-column>
+                        <el-table-column label="数量" width="180">
+                            <template slot-scope="scope">
+                                <el-input-number v-model="scope.row.quantity" :min="1" @change="updateCartQuantity(scope.row)" size="small"></el-input-number>
+                            </template>
+                        </el-table-column>
+                        <el-table-column label="小计">
+                            <template slot-scope="scope">
+                                <span style="color: #409EFF; font-weight: bold;">¥{{(scope.row.product.price * scope.row.quantity).toFixed(2)}}</span>
+                            </template>
+                        </el-table-column>
+                        <el-table-column label="操作" width="100">
+                            <template slot-scope="scope">
+                                <el-button type="danger" icon="el-icon-delete" size="small" @click="removeFromCart(scope.row.id)">删除</el-button>
+                            </template>
+                        </el-table-column>
+                    </el-table>
+                </el-card>
+                
+                <el-empty v-else description="购物车是空的">
+                    <el-button type="primary" @click="backToProducts">继续购物</el-button>
+                </el-empty>
+                
+                <div v-if="cartItems.length > 0" class="cart-summary">
+                    <div class="total-price">总计: ¥{{totalPrice}}</div>
+                    <el-button type="success" size="large" icon="el-icon-shopping-cart-full" @click="checkout">微信结算</el-button>
+                </div>
+            </div>
+
+            <!-- 管理员页面（后端交互：商品CRUD） -->
+            <div v-show="isAdminMode" class="admin-panel">
+                <div class="admin-toolbar">
+                    <h2 style="color: #409EFF; margin: 0;">商品管理</h2>
+                    <div>
+                        <el-button type="primary" @click="showAddProductDialog">添加商品</el-button>
+                        <el-button @click="refreshProducts">刷新</el-button>
+                        <el-button type="info" @click="exitAdminMode">退出管理</el-button>
+                    </div>
+                </div>
+                
+                <el-table :data="products" style="width: 100%" border>
+                    <el-table-column prop="id" label="ID" width="80"></el-table-column>
+                    <el-table-column prop="name" label="商品名称"></el-table-column>
+                    <el-table-column prop="price" label="价格" width="120">
+                        <template slot-scope="scope">¥{{ scope.row.price }}</template>
+                    </el-table-column>
+                    <el-table-column prop="stock" label="库存" width="120"></el-table-column>
+                    <el-table-column prop="description" label="描述"></el-table-column>
+                    <el-table-column label="操作" width="200">
+                        <template slot-scope="scope">
+                            <el-button size="mini" @click="showEditProductDialog(scope.row)">编辑</el-button>
+                            <el-button size="mini" type="danger" @click="deleteProduct(scope.row.id)">删除</el-button>
+                        </template>
+                    </el-table-column>
+                </el-table>
+            </div>
+        </div>
+
+        <!-- 登录/注册弹窗（后端交互：登录/注册） -->
+        <el-dialog :title="authDialogTitle" :visible.sync="authDialogVisible" width="400px">
+            <el-tabs v-model="activeAuthTab">
+                <el-tab-pane label="登录" name="login">
+                    <el-form :model="loginForm" label-width="80px">
+                        <el-form-item label="用户名">
+                            <el-input v-model="loginForm.username" placeholder="请输入用户名"></el-input>
+                        </el-form-item>
+                        <el-form-item label="密码">
+                            <el-input v-model="loginForm.password" type="password" placeholder="请输入密码" @keyup.enter.native="login"></el-input>
+                        </el-form-item>
+                        <el-form-item>
+                            <el-button type="primary" @click="login" style="width: 100%;">登录</el-button>
+                        </el-form-item>
+                    </el-form>
+                </el-tab-pane>
+                <el-tab-pane label="注册" name="register">
+                    <el-form :model="registerForm" label-width="80px">
+                        <el-form-item label="用户名">
+                            <el-input v-model="registerForm.username" placeholder="请输入用户名"></el-input>
+                        </el-form-item>
+                        <el-form-item label="密码">
+                            <el-input v-model="registerForm.password" type="password" placeholder="请输入密码"></el-input>
+                        </el-form-item>
+                        <el-form-item label="确认密码">
+                            <el-input v-model="registerForm.confirmPassword" type="password" placeholder="请确认密码" @keyup.enter.native="register"></el-input>
+                        </el-form-item>
+                        <el-form-item>
+                            <el-button type="primary" @click="register" style="width: 100%;">注册</el-button>
+                        </el-form-item>
+                    </el-form>
+                </el-tab-pane>
+            </el-tabs>
+        </el-dialog>
+
+        <!-- 管理员登录弹窗（后端交互：管理员登录） -->
+        <el-dialog title="管理员登录" :visible.sync="adminLoginDialogVisible" width="400px">
+            <el-form :model="adminLoginForm" label-width="80px">
+                <el-form-item label="用户名">
+                    <el-input v-model="adminLoginForm.username" placeholder="请输入管理员用户名"></el-input>
+                </el-form-item>
+                <el-form-item label="密码">
+                    <el-input v-model="adminLoginForm.password" type="password" placeholder="请输入管理员密码" @keyup.enter.native="adminLogin"></el-input>
+                </el-form-item>
+                <el-form-item>
+                    <el-button type="primary" @click="adminLogin" style="width: 100%;">登录</el-button>
+                </el-form-item>
+            </el-form>
+        </el-dialog>
+
+        <!-- 商品添加/编辑弹窗（后端交互：添加/更新商品） -->
+        <el-dialog :title="productDialog.title" :visible.sync="productDialog.visible" width="500px">
+            <el-form :model="productDialog.form" label-width="80px">
+                <el-form-item label="商品ID">
+                    <el-input v-model.number="productDialog.form.id" type="number" placeholder="请输入商品ID" :readonly="productDialog.isEdit"></el-input>
+                    <span v-if="!productDialog.isEdit" style="font-size: 12px; color: #999;">* 请输入唯一的商品编号</span>
+                </el-form-item>
+                <el-form-item label="商品名称">
+                    <el-input v-model="productDialog.form.name" placeholder="请输入商品名称"></el-input>
+                </el-form-item>
+                <el-form-item label="价格">
+                    <el-input v-model.number="productDialog.form.price" type="number" placeholder="请输入价格"></el-input>
+                </el-form-item>
+                <el-form-item label="库存">
+                    <el-input v-model.number="productDialog.form.stock" type="number" placeholder="请输入库存数量"></el-input>
+                </el-form-item>
+                <el-form-item label="描述">
+                    <el-input v-model="productDialog.form.description" type="textarea" placeholder="请输入商品描述"></el-input>
+                </el-form-item>
+                <el-form-item label="图片URL">
+                    <el-input v-model="productDialog.form.imageUrl" placeholder="请输入图片URL"></el-input>
+                </el-form-item>
+                <el-form-item>
+                    <el-button type="primary" @click="saveProduct" style="width: 100%;">保存</el-button>
+                </el-form-item>
+            </el-form>
+        </el-dialog>
+    </div>
+
+    <script>
+        // Axios实例（后端交互核心）
+        // 注意：启动 ngrok 后，将下面的地址替换为 ngrok 生成的地址
+        // 例如：'https://abc-123-def.ngrok-free.app'
+        var xhr = axios.create({
+            baseURL: 'http://localhost:8080'  // 本地测试用
+            // baseURL: 'https://你的ngrok地址.ngrok-free.app'  // 老师访问用，取消注释并替换地址
+        });
+
+        // Vue核心实例
+        var shopApp = new Vue({
+            el: '#shopApp',
+            data: {
+                // 核心数据（仅保留后端交互相关）
+                searchKeyword: '',
+                currentPage: 'products',
+                products: [],
+                cartItems: [],
+                currentUser: null,
+                isAdminMode: false,
+                authDialogVisible: false,
+                adminLoginDialogVisible: false,
+                authDialogTitle: '登录/注册',
+                activeAuthTab: 'login',
+                // 表单数据
+                loginForm: { username: '', password: '' },
+                registerForm: { username: '', password: '', confirmPassword: '' },
+                adminLoginForm: { username: '', password: '' },
+                productDialog: {
+                    title: '',
+                    visible: false,
+                    form: { id: null, name: '', price: 0, stock: 0, description: '', imageUrl: '' },
+                    isEdit: false
+                }
+            },
+            computed: {
+                // 购物车核心计算属性
+                cartCount() {
+                    return this.cartItems.reduce((sum, item) => sum + item.quantity, 0);
+                },
+                totalPrice() {
+                    return this.cartItems.reduce((sum, item) => sum + (item.product.price * item.quantity), 0).toFixed(2);
+                }
+            },
+            mounted() {
+                this.initApp(); // 初始化加载
+            },
+            methods: {
+                // 初始化（加载用户状态+商品）
+                initApp() {
+                    const savedUser = localStorage.getItem('currentUser');
+                    if (savedUser) {
+                        this.currentUser = JSON.parse(savedUser);
+                        this.updateCartCount();
+                    }
+                    this.loadProducts();
+                },
+
+                // 商品相关（后端交互）
+                loadProducts(keyword = '') {
+                    let url = '/api/products' + (keyword ? '?keyword=' + encodeURIComponent(keyword) : '');
+                    xhr.get(url).then(res => this.products = res.data || []).catch(() => {
+                        this.$message.error('加载商品失败，请检查后端服务');
+                    });
+                },
+                searchProducts() {
+                    this.loadProducts(this.searchKeyword);
+                },
+
+                // 购物车相关（后端交互）
+                addToCart(productId) {
+                    if (!this.currentUser) return this.$message.warning('请先登录') && this.showLoginDialog();
+                    xhr.post('/api/cart', { userId: this.currentUser.id, productId, quantity: 1 }).then(() => {
+                        this.$message.success('已加入购物车');
+                        this.updateCartCount();
+                    }).catch(err => {
+                        this.$message.error(err.response?.data?.error || '添加购物车失败');
+                    });
+                },
+                showCart() {
+                    if (!this.currentUser) return this.$message.warning('请先登录') && this.showLoginDialog();
+                    this.currentPage = 'cart';
+                    this.loadCart();
+                },
+                loadCart() {
+                    xhr.get('/api/cart?userId=' + this.currentUser.id).then(res => {
+                        this.cartItems = res.data || [];
+                    }).catch(() => this.$message.error('加载购物车失败'));
+                },
+                updateCartQuantity(cartItem) {
+                    xhr.put('/api/cart', { id: cartItem.id, quantity: cartItem.quantity }).then(() => {
+                        this.$message.success('更新成功');
+                        this.loadCart();
+                    }).catch(() => this.$message.error('更新失败'));
+                },
+                removeFromCart(cartId) {
+                    this.$confirm('确定删除？', '警告', { type: 'warning' }).then(() => {
+                        xhr.delete('/api/cart?id=' + cartId).then(() => {
+                            this.$message.success('已移除');
+                            this.loadCart();
+                        }).catch(() => this.$message.error('删除失败'));
+                    }).catch(() => {});
+                },
+                updateCartCount() {
+                    if (this.currentUser) this.loadCart();
+                },
+                checkout() {
+                    if (this.cartItems.length === 0) {
+                        return this.$message.warning('购物车是空的');
+                    }
+                    // 显示微信收款码弹窗
+                    this.$alert(
+                        '<div style="text-align: center;">' +
+                        '<p style="font-size: 18px; font-weight: bold; margin-bottom: 15px;">请扫码支付 ¥' + this.totalPrice + '</p>' +
+                        '<img src="./image/wechat-pay.jpg" style="width: 300px; height: 300px; border-radius: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);" alt="微信收款码">' +
+                        '<p style="margin-top: 15px; color: #666;">扫码后请联系客服确认订单</p>' +
+                        '</div>',
+                        '微信支付',
+                        {
+                            dangerouslyUseHTMLString: true,
+                            confirmButtonText: '已完成支付',
+                            callback: action => {
+                                if (action === 'confirm') {
+                                    // 清空购物车（后端交互）
+                                    this.clearCart();
+                                    this.$message.success('支付成功！感谢您的购买，请联系客服确认订单');
+                                    // 跳转回商品列表
+                                    this.backToProducts();
+                                }
+                            }
+                        }
+                    );
+                },
+
+                // 清空购物车
+                clearCart() {
+                    // 调用后端接口清空购物车
+                    xhr.delete('/api/cart?clearAll=true&userId=' + this.currentUser.id).then(() => {
+                        // 清空本地购物车数据
+                        this.cartItems = [];
+                    }).catch(() => {
+                        // 即使后端失败也清空本地数据
+                        this.cartItems = [];
+                    });
+                },
+
+                // 用户认证相关（后端交互）
+                showLoginDialog() {
+                    this.authDialogVisible = true;
+                    this.activeAuthTab = 'login';
+                },
+                login() {
+                    if (!this.loginForm.username || !this.loginForm.password) return this.$message.warning('请填写完整信息');
+                    xhr.get('/api/users?username=' + encodeURIComponent(this.loginForm.username)).then(res => {
+                        const user = res.data;
+                        if (user && user.password === this.loginForm.password) {
+                            this.currentUser = user;
+                            localStorage.setItem('currentUser', JSON.stringify(user));
+                            this.authDialogVisible = false;
+                            this.$message.success('登录成功');
+                            this.updateCartCount();
+                            this.loginForm = { username: '', password: '' };
+                        } else {
+                            this.$message.error(user ? '密码错误' : '用户不存在');
+                        }
+                    }).catch(() => this.$message.error('登录失败，请检查后端服务'));
+                },
+                register() {
+                    const { username, password, confirmPassword } = this.registerForm;
+                    if (!username || !password || !confirmPassword) return this.$message.warning('请填写完整信息');
+                    if (password !== confirmPassword) return this.$message.error('两次密码不一致');
+                    xhr.post('/api/users', { username, password }).then(() => {
+                        this.$message.success('注册成功，请登录');
+                        this.activeAuthTab = 'login';
+                        this.loginForm.username = username;
+                        this.registerForm = { username: '', password: '', confirmPassword: '' };
+                    }).catch(() => this.$message.error('注册失败'));
+                },
+                logout() {
+                    this.currentUser = null;
+                    this.isAdminMode = false;
+                    localStorage.removeItem('currentUser');
+                    this.cartItems = [];
+                    this.currentPage = 'products';
+                    this.$message.success('已退出登录');
+                },
+                handleUserCommand(command) {
+                    if (command === 'logout') this.logout();
+                },
+
+                // 管理员相关（后端交互）
+                enterAdminMode() {
+                    this.adminLoginDialogVisible = true;
+                },
+                adminLogin() {
+                    if (!this.adminLoginForm.username || !this.adminLoginForm.password) return this.$message.warning('请填写完整信息');
+                    const params = new URLSearchParams();
+                    params.append('username', this.adminLoginForm.username);
+                    params.append('password', this.adminLoginForm.password);
+                    xhr.post('/api/admins', params, { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }).then(res => {
+                        if (res.data.success) {
+                            this.isAdminMode = true;
+                            this.adminLoginDialogVisible = false;
+                            this.$message.success('管理员登录成功');
+                            this.adminLoginForm = { username: '', password: '' };
+                        } else {
+                            this.$message.error(res.data.message);
+                        }
+                    }).catch(() => this.$message.error('管理员登录失败'));
+                },
+                exitAdminMode() {
+                    this.isAdminMode = false;
+                    this.$message.success('已退出管理后台');
+                },
+                refreshProducts() {
+                    this.loadProducts();
+                    this.$message.success('商品列表已刷新');
+                },
+
+                // 商品CRUD（管理员后端交互）
+                showAddProductDialog() {
+                    this.productDialog = {
+                        title: '添加商品',
+                        visible: true,
+                        form: { id: '', name: '', price: 0, stock: 0, description: '', imageUrl: '' },
+                        isEdit: false
+                    };
+                },
+                showEditProductDialog(product) {
+                    this.productDialog = {
+                        title: '编辑商品',
+                        visible: true,
+                        form: { ...product, imageUrl: product.imageUrl || product.image_url || '' },
+                        isEdit: true
+                    };
+                },
+                saveProduct() {
+                    const { form, isEdit } = this.productDialog;
+                    if (!form.name || !form.price || form.stock === '' || (!isEdit && !form.id)) {
+                        return this.$message.warning('请填写完整信息');
+                    }
+                    const request = isEdit ? xhr.put('/api/products', form) : xhr.post('/api/products', form);
+                    request.then(() => {
+                        this.$message.success(isEdit ? '商品更新成功' : '商品添加成功');
+                        this.productDialog.visible = false;
+                        this.loadProducts();
+                    }).catch(err => {
+                        this.$message.error(err.response?.data?.error || (isEdit ? '更新失败' : '添加失败'));
+                    });
+                },
+                deleteProduct(productId) {
+                    this.$confirm('确定删除？', '警告', { type: 'warning' }).then(() => {
+                        xhr.delete('/api/products?id=' + productId).then(() => {
+                            this.$message.success('商品删除成功');
+                            this.loadProducts();
+                        }).catch(() => this.$message.error('删除失败'));
+                    }).catch(() => {});
+                },
+
+                // 图片URL处理（适配后端返回）
+                getProductImageUrl(product) {
+                    if (product.imageUrl?.trim()) return product.imageUrl;
+                    if (product.image_url?.trim()) {
+                        return product.image_url.startsWith('D:\\') || product.image_url.startsWith('"D:\\') 
+                            ? './image/' + product.image_url.substring(product.image_url.lastIndexOf('\\') + 1).replace(/"/g, '')
+                            : product.image_url;
+                    }
+                    return product.id ? './image/product-' + product.id + '.jpg' : null;
+                },
+
+                // 页面切换
+                backToProducts() {
+                    this.currentPage = 'products';
+
+                }
+            }
+        });
+    </script>
+</body>
+</html>
